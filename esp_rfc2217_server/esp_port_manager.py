@@ -61,13 +61,9 @@ class EspPortManager(serial.rfc2217.PortManager):
 
     def _telnet_process_subnegotiation(self, suboption):
         if suboption[0:1] == COM_PORT_OPTION and suboption[1:2] == SET_CONTROL:
-            if suboption[2:3] == SET_CONTROL_DTR_OFF:
-                self.is_download_mode = False
-                self.serial.dtr = False
-                return
             # Intercept special reset requests so we can control the timing at this end
             # rather than trying to rely on any network timing
-            elif suboption[2:3] == SET_CONTROL_SOFTWARE_RESET:
+            if suboption[2:3] == SET_CONTROL_SOFTWARE_RESET:
                 return self.reset_device()
             elif suboption[2:3] == SET_CONTROL_RESET_TO_BOOTLOADER:
                 return self.enter_bootloader()
