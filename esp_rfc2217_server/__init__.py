@@ -22,9 +22,7 @@ import threading
 from esp_rfc2217_server.redirector import Redirector
 from esptool.reset import (
     ClassicReset,
-    CustomReset,
     DEFAULT_RESET_DELAY,
-    HardReset,
     UnixTightReset,
 )
 def main():
@@ -79,8 +77,7 @@ def main():
     level = (logging.WARNING, logging.INFO, logging.DEBUG, logging.NOTSET)[
         args.verbosity
     ]
-    logging.basicConfig(level=logging.INFO)
-    # logging.getLogger('root').setLevel(logging.INFO)
+    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
     logging.getLogger("rfc2217").setLevel(level)
 
     # connect to serial port
@@ -134,13 +131,11 @@ def main():
     reader_thread.name = "serial->socket"
     reader_thread.start()
 
-    delay = DEFAULT_RESET_DELAY
-
     # Do one reset: put it into bootloader
     if os.name != "nt":
-        UnixTightReset(ser, delay)()
+        UnixTightReset(ser)()
     else:
-        ClassicReset(ser, delay)()
+        ClassicReset(ser)()
 
     logging.info("Serving serial port: {}".format(ser.name))
 

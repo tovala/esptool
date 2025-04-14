@@ -114,8 +114,6 @@ class UnixTightReset(ResetStrategy):
     """
 
     def reset(self):
-        self._setDTRandRTS(True, True)
-        time.sleep(0.1)
         self._setDTRandRTS(False, False)
         self._setDTRandRTS(True, True)
         self._setDTRandRTS(False, True)  # IO0=HIGH & EN=LOW, chip in reset
@@ -133,8 +131,6 @@ class USBJTAGSerialReset(ResetStrategy):
     """
 
     def reset(self):
-        self._setDTRandRTS(True, True)
-        time.sleep(0.1)
         self._setRTS(False)
         self._setDTR(False)  # Idle
         time.sleep(0.1)
@@ -160,7 +156,6 @@ class HardReset(ResetStrategy):
         self.uses_usb = uses_usb
 
     def reset(self):
-        self._setDTR(False)  # EN->LOW
         self._setRTS(True)  # EN->LOW
         if self.uses_usb:
             # Give the chip some time to come out of reset,
