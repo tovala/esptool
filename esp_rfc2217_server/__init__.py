@@ -95,40 +95,39 @@ def main():
         logging.error(" Could not open serial port {}: {}".format(ser.name, e))
         sys.exit(1)
 
-    settings = ser.get_settings()
-    ser.dtr = False
-    ser.rts = False
-
     client = None
     alive = True
 
     def reader():
         """loop forever and copy serial->socket"""
         logging.debug("reader thread started")
-        while alive:
+        while True:
             try:
                 data = ser.read(ser.in_waiting or 1)
                 if data == b'':
-                    continue
-                if not client:
-                    print(f"Throwing out {data}")
                     continue
 
                 try:
                     print(str(data, 'utf-8'), end="")
                 except:
-                    print(f"invalid utf-8: {data}")
                     pass
 
-                # escape outgoing data when needed (Telnet IAC (0xff) character)
-                client.write(b"".join(client.rfc2217.escape(data)))
+                if client:
+                    # escape outgoing data when needed (Telnet IAC (0xff) character)
+                    client.write(b"".join(client.rfc2217.escape(data)))
 
             except socket.error as msg:
-                logging.error("{}".format(msg))
-                # probably got disconnected
+                # client got disconnected. It's fine.
+                logging.error("remote socket error: {}".format(msg))
+                if client:
+                    client.stop()
+
+            except serial.SerialException as e:
+                # serial port got disconnected. Not so fine!
+                logging.error("serial port was closed: {}".format(msg))
+                alive = False
                 break
 
-        logging.error("serial port closed")
 
     reader_thread = threading.Thread(target=reader)
     reader_thread.daemon = True
@@ -150,7 +149,7 @@ def main():
     srv.bind(("", args.localport))
     srv.listen(1)
     logging.info(" TCP/IP port: {}".format(args.localport))
-    while True:
+    while alive:
         try:
             client_socket, addr = srv.accept()
             logging.info("Connected by {}:{}".format(addr[0], addr[1]))
@@ -175,7 +174,7 @@ def main():
 #                ser.rts = False
                 # Restore port settings (may have been changed by RFC 2217
                 # capable client)
-                ser.apply_settings(settings)
+#                ser.apply_settings(settings)
         except KeyboardInterrupt:
             sys.stdout.write("\n")
             break
