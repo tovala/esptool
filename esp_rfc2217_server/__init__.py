@@ -109,7 +109,7 @@ def main():
                 except:
                     pass
 
-                if client:
+                if client and client.alive:
                     # escape outgoing data when needed (Telnet IAC (0xff) character)
                     client.write(b"".join(client.rfc2217.escape(data)))
 
