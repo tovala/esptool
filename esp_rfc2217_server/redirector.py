@@ -35,31 +35,11 @@ class Redirector(object):
         """connect the serial port to the TCP port by copying everything
         from one side to the other"""
         self.alive = True
-        self.thread_read = threading.Thread(target=self.reader)
-        self.thread_read.daemon = True
-        self.thread_read.name = "serial->socket"
-        self.thread_read.start()
         self.thread_poll = threading.Thread(target=self.statusline_poller)
         self.thread_poll.daemon = True
         self.thread_poll.name = "status line poll"
         self.thread_poll.start()
         self.writer()
-
-    def reader(self):
-        """loop forever and copy serial->socket"""
-        self.log.debug("reader thread started")
-        while self.alive:
-            try:
-                data = self.serial.read(self.serial.in_waiting or 1)
-                if data:
-                    # escape outgoing data when needed (Telnet IAC (0xff) character)
-                    self.write(b"".join(self.rfc2217.escape(data)))
-            except socket.error as msg:
-                self.log.error("{}".format(msg))
-                # probably got disconnected
-                break
-        self.alive = False
-        self.log.debug("reader thread terminated")
 
     def write(self, data):
         """thread safe socket write with no data escaping. used to send telnet stuff"""
@@ -85,5 +65,4 @@ class Redirector(object):
         self.log.debug("stopping")
         if self.alive:
             self.alive = False
-            self.thread_read.join()
             self.thread_poll.join()

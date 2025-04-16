@@ -96,6 +96,8 @@ class ClassicReset(ResetStrategy):
     """
 
     def reset(self):
+        self._setDTR(True)
+        time.sleep(0.1)
         self._setDTR(False)  # IO0=HIGH
         self._setRTS(True)  # EN=LOW, chip in reset
         time.sleep(0.1)
@@ -109,6 +111,8 @@ class UnixTightReset(ResetStrategy):
     """
     UNIX-only reset sequence with custom implementation,
     which allows setting DTR and RTS lines at the same time.
+
+    Puts chip into bootloader mode
     """
 
     def reset(self):
@@ -154,6 +158,8 @@ class HardReset(ResetStrategy):
         self.uses_usb = uses_usb
 
     def reset(self):
+        self._setDTR(False)
+        time.sleep(0.1)
         self._setRTS(True)  # EN->LOW
         if self.uses_usb:
             # Give the chip some time to come out of reset,

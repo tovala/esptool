@@ -20,6 +20,8 @@ from serial.rfc2217 import (
     SET_CONTROL_DTR_ON,
     SET_CONTROL_RTS_OFF,
     SET_CONTROL_RTS_ON,
+    SET_CONTROL_SOFTWARE_RESET,
+    SET_CONTROL_RESET_TO_BOOTLOADER
 )
 
 from esptool.config import load_config_file
@@ -40,31 +42,32 @@ class EspPortManager(serial.rfc2217.PortManager):
         self.is_download_mode = False
         super(EspPortManager, self).__init__(serial_port, connection, logger)
 
+    def reset_device(self):
+        print("RESET DEVICE")
+        reset_thread = threading.Thread(target=self._hard_reset_thread)
+        reset_thread.daemon = True
+        reset_thread.name = "hard_reset_thread"
+        reset_thread.start()
+        return
+
+    def enter_bootloader(self):
+        print("RESET TO BOOTLOADER")
+        self.is_download_mode = True
+        reset_thread = threading.Thread(target=self._reset_thread)
+        reset_thread.daemon = True
+        reset_thread.name = "reset_thread"
+        reset_thread.start()
+        return
+
     def _telnet_process_subnegotiation(self, suboption):
         if suboption[0:1] == COM_PORT_OPTION and suboption[1:2] == SET_CONTROL:
-            if suboption[2:3] == SET_CONTROL_DTR_OFF:
-                self.is_download_mode = False
-                self.serial.dtr = False
-                return
-            elif suboption[2:3] == SET_CONTROL_RTS_OFF and not self.is_download_mode:
-                reset_thread = threading.Thread(target=self._hard_reset_thread)
-                reset_thread.daemon = True
-                reset_thread.name = "hard_reset_thread"
-                reset_thread.start()
-                return
-            elif suboption[2:3] == SET_CONTROL_DTR_ON and not self.is_download_mode:
-                self.is_download_mode = True
-                reset_thread = threading.Thread(target=self._reset_thread)
-                reset_thread.daemon = True
-                reset_thread.name = "reset_thread"
-                reset_thread.start()
-                return
-            elif suboption[2:3] in [
-                SET_CONTROL_DTR_ON,
-                SET_CONTROL_RTS_ON,
-                SET_CONTROL_RTS_OFF,
-            ]:
-                return
+            # Intercept special reset requests so we can control the timing at this end
+            # rather than trying to rely on any network timing
+            if suboption[2:3] == SET_CONTROL_SOFTWARE_RESET:
+                return self.reset_device()
+            elif suboption[2:3] == SET_CONTROL_RESET_TO_BOOTLOADER:
+                return self.enter_bootloader()
+
         # only in cases not handled above do the original implementation in PortManager
         super(EspPortManager, self)._telnet_process_subnegotiation(suboption)
 
@@ -74,11 +77,7 @@ class EspPortManager(serial.rfc2217.PortManager):
         """
         if self.logger:
             self.logger.info("Activating hard reset in thread")
-        cfg_custom_hard_reset_sequence = cfg.get("custom_hard_reset_sequence")
-        if cfg_custom_hard_reset_sequence is not None:
-            CustomReset(self.serial, cfg_custom_hard_reset_sequence)()
-        else:
-            HardReset(self.serial)()
+        HardReset(self.serial)()
 
     def _reset_thread(self):
         """
