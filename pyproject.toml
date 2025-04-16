@@ -62,7 +62,7 @@
     docs = [
         "esp-docs~=1.10",
         "sphinx-tabs",
-    ]
+    ]
 
 [tool.setuptools]
     include-package-data = true
