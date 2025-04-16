@@ -1,3 +1,11 @@
+## v5.1.0 (2025-04-16) 
+
+Tovala fork!
+
+### New Features
+
+- Extend RFC2217 to accept --no-reset option
+
 ## v4.8.1 (2024-09-25)
 
 ### Bug Fixes
