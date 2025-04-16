@@ -155,8 +155,6 @@ def main():
             if not args.no_reset:
                 logging.info("Resetting device on connection")
                 client.rfc2217.reset_device()
-                ser.rts = True
-                ser.dtr = True
             # enter network <-> serial loop
             try:
                 client.shortcircuit()
