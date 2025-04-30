@@ -169,11 +169,13 @@ def main():
                 # capable client)
 #                ser.apply_settings(settings)
         except KeyboardInterrupt:
-            sys.stdout.write("\n")
+            alive = False
+            sys.stdout.write("Interrupted: exiting\n")
             break
         except socket.error as msg:
             logging.error(str(msg))
 
+    reader_thread.join()
     logging.info("--- exit ---")
 
 
