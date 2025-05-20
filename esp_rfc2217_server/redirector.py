@@ -15,6 +15,7 @@ class Redirector(object):
         self.serial = serial_instance
         self.socket = socket
         self._write_lock = threading.Lock()
+        self.alive = False
         self.rfc2217 = EspPortManager(
             self.serial,
             self,

@@ -391,7 +391,7 @@ class ESPLoader(object):
                         break
 
                 raise FatalError(
-                    f"Could not open {port}, the port is busy or doesn't exist."
+                    f"Could not open {port}, the port is busy or doesn't exist!"
                     f"\n({e})\n"
                     f"{hint_msg}"
                 )
