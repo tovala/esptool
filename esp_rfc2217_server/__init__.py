@@ -113,18 +113,16 @@ def main():
                     # escape outgoing data when needed (Telnet IAC (0xff) character)
                     client.write(b"".join(client.rfc2217.escape(data)))
 
+            except serial.SerialException as msg:
+                # serial port got disconnected. Not so fine!
+                logging.error("serial port was closed: {}".format(msg))
+                break
+
             except socket.error as msg:
-                # client got disconnected. It's fine.
+                # client got disconnected. It's fine. Keep going
                 logging.error("remote socket error: {}".format(msg))
                 if client:
                     client.stop()
-
-            except serial.SerialException as e:
-                # serial port got disconnected. Not so fine!
-                logging.error("serial port was closed: {}".format(msg))
-                alive = False
-                break
-
 
     reader_thread = threading.Thread(target=reader)
     reader_thread.daemon = True
@@ -169,7 +167,6 @@ def main():
                 # capable client)
 #                ser.apply_settings(settings)
         except KeyboardInterrupt:
-            alive = False
             sys.stdout.write("Interrupted: exiting\n")
             break
         except socket.error as msg:
@@ -177,7 +174,6 @@ def main():
 
     reader_thread.join()
     logging.info("--- exit ---")
-
 
 if __name__ == "__main__":
     main()
