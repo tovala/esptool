@@ -39,6 +39,7 @@
         "PyYAML>=5.1",
         "intelhex",
         "rich_click",
+        "click==8.1.8"
     ]
 
 [project.urls]
