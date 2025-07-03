@@ -1,3 +1,8 @@
+## v5.2.2 (2025-07-03)
+
+Now with improved reset line signaling, using a separate RFC2217
+command.
+
 ## v5.1.0 (2025-04-16) 
 
 Tovala fork!
